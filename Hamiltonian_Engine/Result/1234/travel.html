@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Embedded QUBO JSON</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #f4f4f4;
+      color: #222;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 24px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    h1 {
+      margin-top: 0;
+    }
+    pre {
+      background: #111;
+      color: #f1f1f1;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 14px;
+      margin: 12px 0;
+      background: #fafafa;
+    }
+    .label {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>QUBO Problem Data</h1>
+    <div id="output"></div>
+
+    <h2>Raw Embedded JSON</h2>
+    <pre id="raw-json"></pre>
+  </div>
+
+  <script>
+    const quboData = [
+      {
+        "problem_id": "QUBO-1",
+        "phase": "feasibility_core",
+        "hamiltonian_expression": "H(x) = 1000.0(Σ_i x_i - 1)² + 1000.0(Σ_i x_i - 1)² + 1000.0(Σ_i,r x_i,r - max_daily_travel_hours)² + 1000.0(Σ_i x_i - 0)²"
+      },
+      {
+        "problem_id": "QUBO-2",
+        "phase": "feasibility_extended",
+        "hamiltonian_expression": "H(x) = 1000.0(Σ_i x_i - 1)² + 1000.0(Σ_i x_i - 1)²"
+      },
+      {
+        "problem_id": "QUBO-3",
+        "phase": "refinement",
+        "hamiltonian_expression": "H(x) = 1000.0(Σ_i x_i - 1)² + 1000.0(Σ_i x_i - 1)²"
+      }
+    ];
+
+    // Show raw JSON
+    document.getElementById("raw-json").textContent = JSON.stringify(quboData, null, 2);
+
+    // Render JSON nicely
+    const output = document.getElementById("output");
+    quboData.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <p><span class="label">Problem ID:</span> ${item.problem_id}</p>
+        <p><span class="label">Phase:</span> ${item.phase}</p>
+        <p><span class="label">Hamiltonian:</span> ${item.hamiltonian_expression}</p>
+      `;
+      output.appendChild(card);
+    });
+  </script>
+</body>
+</html>

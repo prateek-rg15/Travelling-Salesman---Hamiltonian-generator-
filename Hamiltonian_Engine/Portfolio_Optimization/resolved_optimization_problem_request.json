@@ -1,0 +1,562 @@
+{
+  "version": "1.2",
+  "data_contract": {
+    "version": "4.3",
+    "paradigm": "quantum-ready",
+    "formulation": "agnostic",
+    "problem_type": "optimization",
+    "title": "Multi-Sector Equity Portfolio Selection for Maximum Return",
+    "category": "selection",
+    "confidence": 1.0,
+    "problem": {
+      "title": "Multi-Sector Equity Portfolio Selection for Maximum Return",
+      "domain": "agnostic",
+      "description": "Select a subset of equities to maximize historical return, subject to a budget and sector diversification rules.",
+      "optimization_goal": "maximize"
+    },
+    "entities": {
+      "primary": "equity",
+      "secondary": null,
+      "tertiary": null
+    },
+    "entity_field_schema": {
+      "primary": {
+        "equity_id": {
+          "data_type": "identifier",
+          "measurement": {
+            "scale": "nominal",
+            "unit": {
+              "symbol": "",
+              "system": "business",
+              "canonical_symbol": ""
+            },
+            "dimension": {
+              "length": 0,
+              "mass": 0,
+              "time": 0,
+              "current": 0,
+              "temperature": 0,
+              "amount": 0,
+              "luminous_intensity": 0,
+              "currency": 0
+            }
+          },
+          "aggregatable": false,
+          "normalizable": false,
+          "allow_negative": false
+        },
+        "sector": {
+          "data_type": "categorical",
+          "measurement": {
+            "scale": "nominal",
+            "unit": {
+              "symbol": "",
+              "system": "business",
+              "canonical_symbol": ""
+            },
+            "dimension": {
+              "length": 0,
+              "mass": 0,
+              "time": 0,
+              "current": 0,
+              "temperature": 0,
+              "amount": 0,
+              "luminous_intensity": 0,
+              "currency": 0
+            }
+          },
+          "aggregatable": false,
+          "normalizable": false,
+          "allow_negative": false
+        },
+        "cost": {
+          "data_type": "numeric",
+          "measurement": {
+            "scale": "ratio",
+            "unit": {
+              "symbol": "USD",
+              "system": "business",
+              "canonical_symbol": "USD"
+            },
+            "dimension": {
+              "length": 0,
+              "mass": 0,
+              "time": 0,
+              "current": 0,
+              "temperature": 0,
+              "amount": 0,
+              "luminous_intensity": 0,
+              "currency": 1
+            }
+          },
+          "aggregatable": true,
+          "normalizable": true,
+          "allow_negative": false
+        },
+        "return_6m": {
+          "data_type": "numeric",
+          "measurement": {
+            "scale": "ratio",
+            "unit": {
+              "symbol": "%",
+              "system": "business",
+              "canonical_symbol": "%"
+            },
+            "dimension": {
+              "length": 0,
+              "mass": 0,
+              "time": 0,
+              "current": 0,
+              "temperature": 0,
+              "amount": 0,
+              "luminous_intensity": 0,
+              "currency": 0
+            }
+          },
+          "aggregatable": true,
+          "normalizable": true,
+          "allow_negative": true
+        }
+      },
+      "secondary": {},
+      "tertiary": {},
+      "relationships": {}
+    },
+    "entity_groups": {
+      "sector_group": {
+        "entity": "primary",
+        "defined_by_attribute": "sector",
+        "partition": true
+      }
+    },
+    "structural_indices": [
+      {
+        "name": "selection_rank",
+        "type": "ordered",
+        "derived_from": "parameters",
+        "size_rule": "selection_count",
+        "description": "Ranking position of selected equities, used to order the final list.",
+        "roles": {
+          "first": null,
+          "last": null,
+          "previous": null,
+          "next": null,
+          "role_reference": true
+        }
+      }
+    ],
+    "derived_metrics": {},
+    "decision_variables": {
+      "symbol": "x",
+      "type": "binary",
+      "indexing": [
+        {
+          "entity": "primary"
+        },
+        {
+          "structural_index": "selection_rank"
+        }
+      ],
+      "semantics": "x(equity, rank) = 1 if equity is selected at the given rank, 0 otherwise."
+    },
+    "structural_requirements": {
+      "ordering": {
+        "required": true,
+        "type": "position",
+        "scope": [
+          {
+            "entity": "primary"
+          },
+          {
+            "structural_index": "selection_rank"
+          }
+        ],
+        "semantics": {
+          "bounded": true,
+          "cyclic": false,
+          "description": "Each rank position must be assigned to exactly one selected equity, establishing an ordered list."
+        }
+      }
+    },
+    "objective": {
+      "goal": "maximize",
+      "decomposition": [
+        {
+          "name": "primary_objective",
+          "description": "Maximize the total 6-month historical return of the selected equities.",
+          "weight": 1.0
+        }
+      ]
+    },
+    "objective_metric_bindings": {
+      "primary_objective": {
+        "dataset_role": "primary",
+        "field": "return_6m",
+        "normalize": true
+      }
+    },
+    "constraints": {
+      "hard_constraints": [
+        {
+          "id": "C1",
+          "type": "cardinality",
+          "quantifier": {
+            "type": "forall",
+            "structural_indices": [
+              "selection_rank"
+            ]
+          },
+          "cardinality_class": "permutation",
+          "relation": "=",
+          "aggregation": {
+            "variable": "x",
+            "over": {
+              "entities": [
+                "primary"
+              ],
+              "structural_indices": [],
+              "entity_groups": []
+            }
+          },
+          "rhs": {
+            "source": "constant",
+            "value": 1
+          },
+          "description": "Each rank position must be assigned to exactly one equity."
+        },
+        {
+          "id": "C2",
+          "type": "cardinality",
+          "quantifier": {
+            "type": "forall",
+            "entities": [
+              "primary"
+            ]
+          },
+          "cardinality_class": "semantic",
+          "relation": "<=",
+          "aggregation": {
+            "variable": "x",
+            "over": {
+              "entities": [],
+              "structural_indices": [
+                "selection_rank"
+              ],
+              "entity_groups": []
+            }
+          },
+          "rhs": {
+            "source": "constant",
+            "value": 1
+          },
+          "description": "An equity can be selected at most once across all ranks."
+        },
+        {
+          "id": "C3",
+          "type": "inequality",
+          "quantifier": {
+            "type": "none"
+          },
+          "relation": "<=",
+          "enforce_dimension_match": true,
+          "lhs": {
+            "expression_type": "weighted_aggregation",
+            "aggregation": {
+              "variable": "x",
+              "field": "cost",
+              "dataset_role": "primary",
+              "over": {
+                "entities": [
+                  "primary"
+                ],
+                "structural_indices": [
+                  "selection_rank"
+                ],
+                "entity_groups": []
+              },
+              "interaction": {
+                "enabled": false,
+                "variables": [
+                  "x",
+                  "x"
+                ],
+                "relationship_field": null
+              }
+            }
+          },
+          "rhs": {
+            "source": "parameter",
+            "value": "budget"
+          },
+          "description": "Total cost of selected equities must not exceed the budget."
+        },
+        {
+          "id": "C4",
+          "type": "cardinality",
+          "quantifier": {
+            "type": "forall",
+            "entity_groups": [
+              "sector_group"
+            ]
+          },
+          "cardinality_class": "semantic",
+          "relation": "<=",
+          "aggregation": {
+            "variable": "x",
+            "over": {
+              "entities": [],
+              "structural_indices": [
+                "selection_rank"
+              ],
+              "entity_groups": [
+                "sector_group"
+              ]
+            }
+          },
+          "rhs": {
+            "source": "constant",
+            "value": 1
+          },
+          "description": "At most one equity can be selected from each sector."
+        },
+        {
+          "id": "C5",
+          "type": "cardinality",
+          "quantifier": {
+            "type": "none"
+          },
+          "cardinality_class": "semantic",
+          "relation": "=",
+          "aggregation": {
+            "variable": "x",
+            "over": {
+              "entities": [
+                "primary"
+              ],
+              "structural_indices": [
+                "selection_rank"
+              ],
+              "entity_groups": []
+            }
+          },
+          "rhs": {
+            "source": "parameter",
+            "value": "selection_count"
+          },
+          "description": "Exactly the required number of equities must be selected."
+        }
+      ],
+      "soft_constraints": []
+    },
+    "entity_bindings": {
+      "primary": {
+        "name": "equities",
+        "id_field": "equity_id",
+        "source": "equities.csv"
+      },
+      "secondary": null,
+      "tertiary": null
+    },
+    "required_csv_files": [
+      {
+        "file_name": "equities.csv",
+        "role": "entities",
+        "entity": "primary",
+        "fields": [
+          "equity_id",
+          "sector",
+          "cost",
+          "return_6m"
+        ]
+      },
+      {
+        "file_name": "parameters.csv",
+        "role": "parameters",
+        "fields": [
+          "parameter_name",
+          "parameter_value"
+        ],
+        "example_values": {
+          "selection_count": 3,
+          "budget": 100000
+        }
+      }
+    ],
+    "required_parameters": [
+      {
+        "name": "selection_count",
+        "data_type": "integer",
+        "measurement": {
+          "unit": {
+            "symbol": "",
+            "system": "business",
+            "canonical_symbol": ""
+          },
+          "dimension": {
+            "length": 0,
+            "mass": 0,
+            "time": 0,
+            "current": 0,
+            "temperature": 0,
+            "amount": 0,
+            "luminous_intensity": 0,
+            "currency": 0
+          }
+        },
+        "description": "The exact number of equities to select."
+      },
+      {
+        "name": "budget",
+        "data_type": "numeric",
+        "measurement": {
+          "unit": {
+            "symbol": "USD",
+            "system": "business",
+            "canonical_symbol": "USD"
+          },
+          "dimension": {
+            "length": 0,
+            "mass": 0,
+            "time": 0,
+            "current": 0,
+            "temperature": 0,
+            "amount": 0,
+            "luminous_intensity": 0,
+            "currency": 1
+          }
+        },
+        "description": "Maximum total cost allowed for the selected equities."
+      }
+    ],
+    "unit_normalization": {
+      "enabled": false,
+      "target_system": "SI",
+      "enforcement": {
+        "require_canonical_unit": true,
+        "enforce_dimension_match": true
+      },
+      "conversion_strategy": {
+        "mode": "automatic",
+        "allow_implicit_conversion": false
+      }
+    },
+    "metric_normalization": {
+      "enabled": false,
+      "scope": "per_field",
+      "canonical_metric_dictionary": {
+        "linear": [
+          "return",
+          "cost",
+          "profit",
+          "price",
+          "weight",
+          "penalty",
+          "score"
+        ],
+        "pairwise": [
+          "distance",
+          "time",
+          "covariance",
+          "correlation",
+          "interaction_cost"
+        ]
+      },
+      "direction_alignment": {
+        "enforce_minimization_form": true
+      },
+      "missing_value_policy": {
+        "strategy": "error"
+      }
+    },
+    "numeric_scale_normalization": {
+      "enabled": false,
+      "strategy": "minmax",
+      "scope": "per_metric",
+      "preserve_zero": true,
+      "clipping": {
+        "enabled": false,
+        "lower_percentile": 1,
+        "upper_percentile": 99
+      },
+      "fixed_range": {
+        "min": 0.0,
+        "max": 1.0
+      },
+      "conditioning_goal": {
+        "target_dynamic_range": 10.0
+      }
+    }
+  },
+  "solver_selection_policy": {
+    "version": "1.1",
+    "mode": "auto",
+    "stage_intent": "feasibility | optimization | refinement",
+    "problem_characteristics": {
+      "constraint_dominant": true,
+      "objective_smoothness": "smooth | rough | unknown",
+      "coupling_density": "sparse | medium | dense",
+      "variable_interdependence": "low | medium | high",
+      "energy_landscape": "convex_like | multi_modal | unknown"
+    },
+    "execution_preferences": {
+      "priority": "solution_quality | runtime | stability",
+      "exploration_level": "low | medium | high",
+      "determinism_required": true
+    },
+    "allowed_gate_based_solvers": [
+      "classical_baseline",
+      "qaoa",
+      "adapt_qaoa",
+      "vqe",
+      "grover_search",
+      "quantum_walk"
+    ],
+    "solver_overrides": {
+      "force_solver": null,
+      "exclude_solvers": []
+    },
+    "comparison": {
+      "enabled": true,
+      "solvers": [
+        "classical_baseline",
+        "qaoa"
+      ],
+      "selection_metric": "energy",
+      "retain_all_results": true
+    }
+  },
+  "pattern_decision": {
+    "selected_pattern": "A",
+    "confidence": 1.0,
+    "rationale": "Pure structural feasibility staging.",
+    "pattern_characteristics": {
+      "structural_constraints": 4,
+      "temporal_constraints": 0,
+      "business_constraints": 0,
+      "objective_count": 1
+    }
+  },
+  "runtime_context": {
+    "environment": "pipeline",
+    "mode": "api",
+    "user_id": "123456789"
+  },
+  "derived_metadata": {
+    "hard_constraint_count": 5,
+    "soft_constraint_count": 0,
+    "objective_count": 1,
+    "estimated_variable_scale": "medium"
+  },
+  "constraint_tiers": {
+    "T0_STRUCTURAL": [],
+    "T1_FEASIBILITY": [
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5"
+    ],
+    "T2_OPERATIONAL": [],
+    "T3_OBJECTIVE": []
+  }
+}

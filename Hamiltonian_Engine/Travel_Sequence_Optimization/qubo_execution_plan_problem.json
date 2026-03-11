@@ -1,0 +1,433 @@
+{
+  "pattern": "A",
+  "split_policy": "minimal",
+  "max_constraints_per_group": 10,
+  "derived_qubo_count": 3,
+  "qubo_stages": [
+    {
+      "qubo_id": "QUBO-1",
+      "phase": "feasibility_core",
+      "engine_phase": "feasibility_core",
+      "structure_hints": {
+        "ordering_required": true,
+        "ordering_type": "succession",
+        "ordering_scope": {
+          "entity": "primary",
+          "position_index": "position",
+          "time_index": null
+        },
+        "ordering_semantics": {
+          "bounded": true,
+          "cyclic": false,
+          "description": "Cities must be visited in a sequence across positions and days."
+        }
+      },
+      "constraints": [
+        {
+          "id": "C1",
+          "type": "cardinality",
+          "quantifier": {
+            "type": "forall",
+            "structural_indices": [
+              "position",
+              "day"
+            ]
+          },
+          "cardinality_class": "permutation",
+          "relation": "=",
+          "aggregation": {
+            "variable": "x",
+            "over": {
+              "entities": [
+                "primary"
+              ]
+            }
+          },
+          "rhs": {
+            "source": "constant",
+            "value": 1
+          },
+          "description": "Each position on each day must be assigned to exactly one city.",
+          "tag": "feasibility",
+          "energy_role": "must"
+        },
+        {
+          "id": "C2",
+          "type": "cardinality",
+          "quantifier": {
+            "type": "forall",
+            "entities": [
+              "primary"
+            ]
+          },
+          "cardinality_class": "semantic",
+          "relation": "=",
+          "aggregation": {
+            "variable": "x",
+            "over": {
+              "structural_indices": [
+                "position",
+                "day"
+              ]
+            }
+          },
+          "rhs": {
+            "source": "constant",
+            "value": 1
+          },
+          "description": "Each city must be visited exactly once across the entire schedule.",
+          "tag": "feasibility",
+          "energy_role": "must"
+        },
+        {
+          "id": "C3",
+          "type": "inequality",
+          "quantifier": {
+            "type": "forall",
+            "structural_indices": [
+              "position"
+            ]
+          },
+          "relation": "<=",
+          "enforce_dimension_match": true,
+          "lhs": {
+            "expression_type": "aggregation",
+            "aggregation": {
+              "variable": "x",
+              "field": "travel_time",
+              "dataset_role": "relationships",
+              "over": {
+                "entities": [
+                  "primary"
+                ],
+                "structural_indices": [
+                  "position"
+                ]
+              },
+              "interaction": {
+                "enabled": true,
+                "variables": [
+                  "x",
+                  "x"
+                ],
+                "relationship_field": "travel_time"
+              }
+            }
+          },
+          "rhs": {
+            "source": "parameter",
+            "value": "max_daily_travel_hours"
+          },
+          "description": "Cumulative travel time per day must not exceed the daily limit (derived from 7 AM start and 7 PM end).",
+          "tag": "structural",
+          "energy_role": "none"
+        },
+        {
+          "id": "C4",
+          "type": "inequality",
+          "quantifier": {
+            "type": "forall",
+            "structural_indices": [
+              "position"
+            ]
+          },
+          "relation": "=",
+          "enforce_dimension_match": true,
+          "lhs": {
+            "expression_type": "aggregation",
+            "aggregation": {
+              "variable": "x",
+              "over": {
+                "entity_groups": [
+                  "no_overnight_cities"
+                ],
+                "structural_indices": [
+                  "position"
+                ]
+              }
+            }
+          },
+          "rhs": {
+            "source": "constant",
+            "value": 0
+          },
+          "description": "Cities unsuitable for overnight stays cannot be assigned to the last position of a day.",
+          "tag": "structural",
+          "energy_role": "none"
+        }
+      ],
+      "objective": null,
+      "solver_selection_policy": {
+        "version": "1.1",
+        "mode": "auto",
+        "stage_intent": "feasibility_core",
+        "problem_characteristics": {
+          "constraint_dominant": true,
+          "objective_smoothness": "smooth | rough | unknown",
+          "coupling_density": "sparse | medium | dense",
+          "variable_interdependence": "low | medium | high",
+          "energy_landscape": "convex_like | multi_modal | unknown"
+        },
+        "execution_preferences": {
+          "priority": "solution_quality | runtime | stability",
+          "exploration_level": "low | medium | high",
+          "determinism_required": true
+        },
+        "allowed_gate_based_solvers": [
+          "classical_baseline",
+          "qaoa",
+          "adapt_qaoa",
+          "vqe",
+          "grover_search",
+          "quantum_walk"
+        ],
+        "solver_overrides": {
+          "force_solver": null,
+          "exclude_solvers": []
+        },
+        "comparison": {
+          "enabled": true,
+          "solvers": [
+            "classical_baseline",
+            "qaoa"
+          ],
+          "selection_metric": "energy",
+          "retain_all_results": true
+        }
+      }
+    },
+    {
+      "qubo_id": "QUBO-2",
+      "phase": "feasibility_extended",
+      "engine_phase": "feasibility_extended",
+      "structure_hints": {
+        "ordering_required": true,
+        "ordering_type": "succession",
+        "ordering_scope": {
+          "entity": "primary",
+          "position_index": "position",
+          "time_index": null
+        },
+        "ordering_semantics": {
+          "bounded": true,
+          "cyclic": false,
+          "description": "Cities must be visited in a sequence across positions and days."
+        }
+      },
+      "constraints": [
+        {
+          "id": "C1",
+          "type": "cardinality",
+          "quantifier": {
+            "type": "forall",
+            "structural_indices": [
+              "position",
+              "day"
+            ]
+          },
+          "cardinality_class": "permutation",
+          "relation": "=",
+          "aggregation": {
+            "variable": "x",
+            "over": {
+              "entities": [
+                "primary"
+              ]
+            }
+          },
+          "rhs": {
+            "source": "constant",
+            "value": 1
+          },
+          "description": "Each position on each day must be assigned to exactly one city.",
+          "tag": "feasibility",
+          "energy_role": "must"
+        },
+        {
+          "id": "C2",
+          "type": "cardinality",
+          "quantifier": {
+            "type": "forall",
+            "entities": [
+              "primary"
+            ]
+          },
+          "cardinality_class": "semantic",
+          "relation": "=",
+          "aggregation": {
+            "variable": "x",
+            "over": {
+              "structural_indices": [
+                "position",
+                "day"
+              ]
+            }
+          },
+          "rhs": {
+            "source": "constant",
+            "value": 1
+          },
+          "description": "Each city must be visited exactly once across the entire schedule.",
+          "tag": "feasibility",
+          "energy_role": "must"
+        }
+      ],
+      "objective": null,
+      "solver_selection_policy": {
+        "version": "1.1",
+        "mode": "auto",
+        "stage_intent": "feasibility_extended",
+        "problem_characteristics": {
+          "constraint_dominant": true,
+          "objective_smoothness": "smooth | rough | unknown",
+          "coupling_density": "sparse | medium | dense",
+          "variable_interdependence": "low | medium | high",
+          "energy_landscape": "convex_like | multi_modal | unknown"
+        },
+        "execution_preferences": {
+          "priority": "solution_quality | runtime | stability",
+          "exploration_level": "low | medium | high",
+          "determinism_required": true
+        },
+        "allowed_gate_based_solvers": [
+          "classical_baseline",
+          "qaoa",
+          "adapt_qaoa",
+          "vqe",
+          "grover_search",
+          "quantum_walk"
+        ],
+        "solver_overrides": {
+          "force_solver": null,
+          "exclude_solvers": []
+        },
+        "comparison": {
+          "enabled": true,
+          "solvers": [
+            "classical_baseline",
+            "qaoa"
+          ],
+          "selection_metric": "energy",
+          "retain_all_results": true
+        }
+      }
+    },
+    {
+      "qubo_id": "QUBO-3",
+      "phase": "refinement",
+      "engine_phase": "refinement",
+      "structure_hints": {
+        "ordering_required": true,
+        "ordering_type": "succession",
+        "ordering_scope": {
+          "entity": "primary",
+          "position_index": "position",
+          "time_index": null
+        },
+        "ordering_semantics": {
+          "bounded": true,
+          "cyclic": false,
+          "description": "Cities must be visited in a sequence across positions and days."
+        }
+      },
+      "constraints": [
+        {
+          "id": "C1",
+          "type": "cardinality",
+          "quantifier": {
+            "type": "forall",
+            "structural_indices": [
+              "position",
+              "day"
+            ]
+          },
+          "cardinality_class": "permutation",
+          "relation": "=",
+          "aggregation": {
+            "variable": "x",
+            "over": {
+              "entities": [
+                "primary"
+              ]
+            }
+          },
+          "rhs": {
+            "source": "constant",
+            "value": 1
+          },
+          "description": "Each position on each day must be assigned to exactly one city.",
+          "tag": "feasibility",
+          "energy_role": "must"
+        },
+        {
+          "id": "C2",
+          "type": "cardinality",
+          "quantifier": {
+            "type": "forall",
+            "entities": [
+              "primary"
+            ]
+          },
+          "cardinality_class": "semantic",
+          "relation": "=",
+          "aggregation": {
+            "variable": "x",
+            "over": {
+              "structural_indices": [
+                "position",
+                "day"
+              ]
+            }
+          },
+          "rhs": {
+            "source": "constant",
+            "value": 1
+          },
+          "description": "Each city must be visited exactly once across the entire schedule.",
+          "tag": "feasibility",
+          "energy_role": "must"
+        }
+      ],
+      "objective": [],
+      "solver_selection_policy": {
+        "version": "1.1",
+        "mode": "auto",
+        "stage_intent": "refinement",
+        "problem_characteristics": {
+          "constraint_dominant": true,
+          "objective_smoothness": "smooth | rough | unknown",
+          "coupling_density": "sparse | medium | dense",
+          "variable_interdependence": "low | medium | high",
+          "energy_landscape": "convex_like | multi_modal | unknown"
+        },
+        "execution_preferences": {
+          "priority": "solution_quality | runtime | stability",
+          "exploration_level": "low | medium | high",
+          "determinism_required": true
+        },
+        "allowed_gate_based_solvers": [
+          "classical_baseline",
+          "qaoa",
+          "adapt_qaoa",
+          "vqe",
+          "grover_search",
+          "quantum_walk"
+        ],
+        "solver_overrides": {
+          "force_solver": null,
+          "exclude_solvers": []
+        },
+        "comparison": {
+          "enabled": true,
+          "solvers": [
+            "classical_baseline",
+            "qaoa"
+          ],
+          "selection_metric": "energy",
+          "retain_all_results": true
+        }
+      }
+    }
+  ],
+  "warnings": []
+}

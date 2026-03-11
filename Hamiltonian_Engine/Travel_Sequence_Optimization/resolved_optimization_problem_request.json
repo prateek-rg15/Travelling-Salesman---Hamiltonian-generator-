@@ -1,0 +1,592 @@
+{
+  "version": "1.2",
+  "data_contract": {
+    "version": "4.3",
+    "paradigm": "quantum-ready",
+    "formulation": "agnostic",
+    "problem_type": "optimization",
+    "title": "Multi-Day Travel Sequence Optimization",
+    "category": "routing",
+    "confidence": 1.0,
+    "problem": {
+      "title": "Multi-Day Travel Sequence Optimization",
+      "domain": "agnostic",
+      "description": "Find the optimal sequence of visiting 10 cities across multiple days, minimizing travel time while respecting daily start/end time windows and overnight lodging constraints.",
+      "optimization_goal": "minimize"
+    },
+    "entities": {
+      "primary": "city",
+      "secondary": null,
+      "tertiary": null
+    },
+    "entity_field_schema": {
+      "primary": {
+        "city_id": {
+          "data_type": "identifier",
+          "measurement": {
+            "scale": "nominal",
+            "unit": {
+              "symbol": "",
+              "system": "business",
+              "canonical_symbol": ""
+            },
+            "dimension": {
+              "length": 0,
+              "mass": 0,
+              "time": 0,
+              "current": 0,
+              "temperature": 0,
+              "amount": 0,
+              "luminous_intensity": 0,
+              "currency": 0
+            }
+          },
+          "aggregatable": false,
+          "normalizable": false,
+          "allow_negative": false
+        },
+        "is_overnight_allowed": {
+          "data_type": "boolean",
+          "measurement": {
+            "scale": "nominal",
+            "unit": {
+              "symbol": "",
+              "system": "business",
+              "canonical_symbol": ""
+            },
+            "dimension": {
+              "length": 0,
+              "mass": 0,
+              "time": 0,
+              "current": 0,
+              "temperature": 0,
+              "amount": 0,
+              "luminous_intensity": 0,
+              "currency": 0
+            }
+          },
+          "aggregatable": false,
+          "normalizable": false,
+          "allow_negative": false
+        }
+      },
+      "secondary": {},
+      "tertiary": {},
+      "relationships": {
+        "travel": {
+          "source_entity": "city",
+          "target_entity": "city",
+          "fields": {
+            "travel_time": {
+              "data_type": "numeric",
+              "measurement": {
+                "scale": "ratio",
+                "unit": {
+                  "symbol": "h",
+                  "system": "SI",
+                  "canonical_symbol": "s"
+                },
+                "dimension": {
+                  "length": 0,
+                  "mass": 0,
+                  "time": 1,
+                  "current": 0,
+                  "temperature": 0,
+                  "amount": 0,
+                  "luminous_intensity": 0,
+                  "currency": 0
+                }
+              },
+              "aggregatable": true,
+              "normalizable": true,
+              "allow_negative": false
+            }
+          }
+        }
+      }
+    },
+    "entity_groups": {
+      "no_overnight_cities": {
+        "entity": "primary",
+        "defined_by_attribute": "is_overnight_allowed",
+        "partition": true
+      }
+    },
+    "structural_indices": [
+      {
+        "name": "position",
+        "type": "ordered",
+        "derived_from": "parameters",
+        "size_rule": "position_count",
+        "description": "Ordered position in the overall travel sequence.",
+        "roles": {
+          "first": null,
+          "last": null,
+          "previous": null,
+          "next": null,
+          "role_reference": true
+        }
+      },
+      {
+        "name": "day",
+        "type": "ordered",
+        "derived_from": "parameters",
+        "size_rule": "day_count",
+        "description": "Day index for the multi-day schedule.",
+        "roles": {
+          "first": null,
+          "last": null,
+          "previous": null,
+          "next": null,
+          "role_reference": true
+        }
+      }
+    ],
+    "derived_metrics": {
+      "cumulative_travel_time": {
+        "expression_type": "cumulative",
+        "indexed_by": [
+          {
+            "entity": "primary"
+          },
+          {
+            "structural_index": "position"
+          }
+        ],
+        "relationship_access": true,
+        "definition": {
+          "operator": "+",
+          "left": {
+            "operand": "travel_time",
+            "source": "relationship",
+            "relationship": "travel"
+          },
+          "right": {
+            "operand": "previous_cumulative_travel_time"
+          }
+        }
+      }
+    },
+    "decision_variables": {
+      "symbol": "x",
+      "type": "binary",
+      "indexing": [
+        {
+          "entity": "primary"
+        },
+        {
+          "structural_index": "position"
+        },
+        {
+          "structural_index": "day"
+        }
+      ],
+      "semantics": "x(city, position, day) = 1 if city is visited at a given position on a given day."
+    },
+    "structural_requirements": {
+      "ordering": {
+        "required": true,
+        "type": "succession",
+        "scope": [
+          {
+            "entity": "primary"
+          },
+          {
+            "structural_index": "position"
+          }
+        ],
+        "semantics": {
+          "bounded": true,
+          "cyclic": false,
+          "description": "Cities must be visited in a sequence across positions and days."
+        }
+      }
+    },
+    "objective": {
+      "goal": "minimize",
+      "decomposition": [
+        {
+          "name": "total_travel_time",
+          "description": "Minimize the sum of travel times between consecutive cities in the sequence.",
+          "weight": 1.0
+        }
+      ]
+    },
+    "objective_metric_bindings": {
+      "total_travel_time": {
+        "dataset_role": "relationships",
+        "field": "travel_time",
+        "normalize": false
+      }
+    },
+    "constraints": {
+      "hard_constraints": [
+        {
+          "id": "C1",
+          "type": "cardinality",
+          "quantifier": {
+            "type": "forall",
+            "structural_indices": [
+              "position",
+              "day"
+            ]
+          },
+          "cardinality_class": "permutation",
+          "relation": "=",
+          "aggregation": {
+            "variable": "x",
+            "over": {
+              "entities": [
+                "primary"
+              ]
+            }
+          },
+          "rhs": {
+            "source": "constant",
+            "value": 1
+          },
+          "description": "Each position on each day must be assigned to exactly one city."
+        },
+        {
+          "id": "C2",
+          "type": "cardinality",
+          "quantifier": {
+            "type": "forall",
+            "entities": [
+              "primary"
+            ]
+          },
+          "cardinality_class": "semantic",
+          "relation": "=",
+          "aggregation": {
+            "variable": "x",
+            "over": {
+              "structural_indices": [
+                "position",
+                "day"
+              ]
+            }
+          },
+          "rhs": {
+            "source": "constant",
+            "value": 1
+          },
+          "description": "Each city must be visited exactly once across the entire schedule."
+        },
+        {
+          "id": "C3",
+          "type": "inequality",
+          "quantifier": {
+            "type": "forall",
+            "structural_indices": [
+              "position"
+            ]
+          },
+          "relation": "<=",
+          "enforce_dimension_match": true,
+          "lhs": {
+            "expression_type": "aggregation",
+            "aggregation": {
+              "variable": "x",
+              "field": "travel_time",
+              "dataset_role": "relationships",
+              "over": {
+                "entities": [
+                  "primary"
+                ],
+                "structural_indices": [
+                  "position"
+                ]
+              },
+              "interaction": {
+                "enabled": true,
+                "variables": [
+                  "x",
+                  "x"
+                ],
+                "relationship_field": "travel_time"
+              }
+            }
+          },
+          "rhs": {
+            "source": "parameter",
+            "value": "max_daily_travel_hours"
+          },
+          "description": "Cumulative travel time per day must not exceed the daily limit (derived from 7 AM start and 7 PM end)."
+        },
+        {
+          "id": "C4",
+          "type": "inequality",
+          "quantifier": {
+            "type": "forall",
+            "structural_indices": [
+              "position"
+            ]
+          },
+          "relation": "=",
+          "enforce_dimension_match": true,
+          "lhs": {
+            "expression_type": "aggregation",
+            "aggregation": {
+              "variable": "x",
+              "over": {
+                "entity_groups": [
+                  "no_overnight_cities"
+                ],
+                "structural_indices": [
+                  "position"
+                ]
+              }
+            }
+          },
+          "rhs": {
+            "source": "constant",
+            "value": 0
+          },
+          "description": "Cities unsuitable for overnight stays cannot be assigned to the last position of a day."
+        }
+      ],
+      "soft_constraints": []
+    },
+    "entity_bindings": {
+      "primary": {
+        "name": "cities",
+        "id_field": "city_id",
+        "source": "cities.csv"
+      },
+      "secondary": null,
+      "tertiary": null
+    },
+    "required_csv_files": [
+      {
+        "file_name": "cities.csv",
+        "role": "entities",
+        "entity": "primary",
+        "fields": [
+          "city_id",
+          "is_overnight_allowed"
+        ]
+      },
+      {
+        "file_name": "travel_times.csv",
+        "role": "relationships",
+        "relationship": "travel",
+        "fields": [
+          "origin_id",
+          "destination_id",
+          "travel_time"
+        ]
+      },
+      {
+        "file_name": "parameters.csv",
+        "role": "parameters",
+        "fields": [
+          "parameter_name",
+          "parameter_value"
+        ],
+        "example_values": {
+          "position_count": 10,
+          "day_count": 3,
+          "max_daily_travel_hours": 12
+        }
+      }
+    ],
+    "required_parameters": [
+      {
+        "name": "position_count",
+        "data_type": "integer",
+        "measurement": {
+          "unit": {
+            "symbol": "",
+            "system": "business",
+            "canonical_symbol": ""
+          },
+          "dimension": {
+            "length": 0,
+            "mass": 0,
+            "time": 0,
+            "current": 0,
+            "temperature": 0,
+            "amount": 0,
+            "luminous_intensity": 0,
+            "currency": 0
+          }
+        },
+        "description": "Total number of positions in the sequence (equal to number of cities)."
+      },
+      {
+        "name": "day_count",
+        "data_type": "integer",
+        "measurement": {
+          "unit": {
+            "symbol": "",
+            "system": "business",
+            "canonical_symbol": ""
+          },
+          "dimension": {
+            "length": 0,
+            "mass": 0,
+            "time": 0,
+            "current": 0,
+            "temperature": 0,
+            "amount": 0,
+            "luminous_intensity": 0,
+            "currency": 0
+          }
+        },
+        "description": "Number of days in the travel schedule."
+      },
+      {
+        "name": "max_daily_travel_hours",
+        "data_type": "numeric",
+        "measurement": {
+          "unit": {
+            "symbol": "h",
+            "system": "SI",
+            "canonical_symbol": "s"
+          },
+          "dimension": {
+            "length": 0,
+            "mass": 0,
+            "time": 1,
+            "current": 0,
+            "temperature": 0,
+            "amount": 0,
+            "luminous_intensity": 0,
+            "currency": 0
+          }
+        },
+        "description": "Maximum allowable travel time per day (from 7 AM to 7 PM)."
+      }
+    ],
+    "unit_normalization": {
+      "enabled": false,
+      "target_system": "SI",
+      "enforcement": {
+        "require_canonical_unit": true,
+        "enforce_dimension_match": true
+      },
+      "conversion_strategy": {
+        "mode": "automatic",
+        "allow_implicit_conversion": false
+      }
+    },
+    "metric_normalization": {
+      "enabled": false,
+      "scope": "per_field",
+      "canonical_metric_dictionary": {
+        "linear": [
+          "return",
+          "cost",
+          "profit",
+          "price",
+          "weight",
+          "penalty",
+          "score"
+        ],
+        "pairwise": [
+          "distance",
+          "time",
+          "covariance",
+          "correlation",
+          "interaction_cost"
+        ]
+      },
+      "direction_alignment": {
+        "enforce_minimization_form": true
+      },
+      "missing_value_policy": {
+        "strategy": "error"
+      }
+    },
+    "numeric_scale_normalization": {
+      "enabled": false,
+      "strategy": "minmax",
+      "scope": "per_metric",
+      "preserve_zero": true,
+      "clipping": {
+        "enabled": false,
+        "lower_percentile": 1,
+        "upper_percentile": 99
+      },
+      "fixed_range": {
+        "min": 0.0,
+        "max": 1.0
+      },
+      "conditioning_goal": {
+        "target_dynamic_range": 10.0
+      }
+    }
+  },
+  "solver_selection_policy": {
+    "version": "1.1",
+    "mode": "auto",
+    "stage_intent": "feasibility | optimization | refinement",
+    "problem_characteristics": {
+      "constraint_dominant": true,
+      "objective_smoothness": "smooth | rough | unknown",
+      "coupling_density": "sparse | medium | dense",
+      "variable_interdependence": "low | medium | high",
+      "energy_landscape": "convex_like | multi_modal | unknown"
+    },
+    "execution_preferences": {
+      "priority": "solution_quality | runtime | stability",
+      "exploration_level": "low | medium | high",
+      "determinism_required": true
+    },
+    "allowed_gate_based_solvers": [
+      "classical_baseline",
+      "qaoa",
+      "adapt_qaoa",
+      "vqe",
+      "grover_search",
+      "quantum_walk"
+    ],
+    "solver_overrides": {
+      "force_solver": null,
+      "exclude_solvers": []
+    },
+    "comparison": {
+      "enabled": true,
+      "solvers": [
+        "classical_baseline",
+        "qaoa"
+      ],
+      "selection_metric": "energy",
+      "retain_all_results": true
+    }
+  },
+  "pattern_decision": {
+    "selected_pattern": "A",
+    "confidence": 1.0,
+    "rationale": "Pure structural feasibility staging.",
+    "pattern_characteristics": {
+      "structural_constraints": 2,
+      "temporal_constraints": 0,
+      "business_constraints": 0,
+      "objective_count": 1
+    }
+  },
+  "runtime_context": {
+    "environment": "pipeline",
+    "mode": "api",
+    "user_id": "123456789"
+  },
+  "derived_metadata": {
+    "hard_constraint_count": 4,
+    "soft_constraint_count": 0,
+    "objective_count": 1,
+    "estimated_variable_scale": "medium"
+  },
+  "constraint_tiers": {
+    "T0_STRUCTURAL": [],
+    "T1_FEASIBILITY": [
+      "C1",
+      "C2",
+      "C3",
+      "C4"
+    ],
+    "T2_OPERATIONAL": [],
+    "T3_OBJECTIVE": []
+  }
+}

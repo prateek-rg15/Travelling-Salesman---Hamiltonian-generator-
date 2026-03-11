@@ -1,0 +1,561 @@
+# ==================================================
+# UNIVERSAL QUBO INTERMEDIATE REPRESENTATION (IR)
+# ==================================================
+
+universal_qubo_ir:
+
+  version: "5.1"
+
+  description: >
+    Canonical domain-agnostic Hamiltonian-complete
+    intermediate representation used for compiling
+    optimization problems into QUBO form.
+
+    The IR separates:
+
+      • semantic modeling
+      • constraint algebra
+      • Hamiltonian structure
+      • solver materialization
+
+    v5.1 adds support for:
+
+      • derived metrics
+      • pairwise interaction objectives
+      • routing connectivity constraints
+      • precedence chain modeling
+      • relationship gating constraints
+      • Hamiltonian grammar validation
+
+  compatibility:
+
+    backward_compatible_with:
+
+      - "5.0"
+      - "4.2"
+      - "4.1"
+      - "3.0"
+      - "2.x"
+      - "1.x"
+
+# ==================================================
+# VARIABLE PRIMITIVES
+# ==================================================
+
+  variable_primitives:
+
+    binary:
+      domain: [0,1]
+      description: "Binary decision variable"
+
+    integer:
+      domain: "ℤ"
+      description: "Discrete integer variable"
+
+    continuous:
+      domain: "ℝ"
+      description: "Continuous variable requiring discretization"
+
+# ==================================================
+# VARIABLE STRUCTURES
+# ==================================================
+
+  variable_structures:
+
+    indexed:
+      description: "Variable indexed over one or more index sets"
+      indexable: true
+
+    scalar:
+      description: "Single scalar variable"
+      indexable: false
+
+    ordered_binary:
+      description: "Binary variable representing ordered position"
+      indexable: true
+
+    delta_binary:
+      description: "Binary difference encoding variable"
+      indexable: true
+
+    entity_indicator:
+      description: "Compiler derived indicator variable"
+      indexable: true
+
+    slack:
+      description: "Compiler generated slack variable"
+      indexable: false
+      auto_generated: true
+      requires_encoding: true
+      non_negative: true
+
+# ==================================================
+# VARIABLE ORIGINS
+# ==================================================
+
+  variable_origins:
+
+    decision_variable: {}
+    ordering: {}
+    derived: {}
+    slack: {}
+
+# ==================================================
+# VARIABLE DEFINITIONS
+# ==================================================
+
+  variables:
+
+    <variable_name>:
+
+      primitive: "binary | integer | continuous"
+
+      structure: "indexed | scalar | ordered_binary | delta_binary | slack"
+
+      origin: "decision_variable | ordering | derived | slack"
+
+      domain:
+        lower: "<number|null>"
+        upper: "<number|null>"
+
+      index_sets:
+
+        - name: "<index_symbol>"
+
+          kind: "entity | structural_index"
+
+          source: "<identifier>"
+
+          cardinality:
+
+            mode: "dataset | fixed | derived"
+
+            value: "<number|null>"
+
+# --------------------------------------------------
+# SLACK ENCODING
+# --------------------------------------------------
+
+      slack_encoding:
+
+        type: "binary_weighted"
+
+        bit_length: "<integer|null>"
+
+        upper_bound: "<number|null>"
+
+        auto_sized: true
+
+        expansion_status: "pending | resolved"
+
+        resolved_bits:
+
+          count: "<integer|null>"
+
+          upper_bound: "<number|null>"
+
+# ==================================================
+# PARAMETERS
+# ==================================================
+
+  parameters:
+
+    - name: "<parameter_name>"
+      mode: "runtime | constant"
+      value: "<number|null>"
+
+# ==================================================
+# DATASET REFERENCES
+# ==================================================
+
+  dataset_references:
+
+    entity:
+
+      description: "Dataset entity reference"
+
+    field:
+
+      description: "Attribute within entity dataset"
+
+    relationship:
+
+      description: "Pairwise relationship dataset"
+
+# ==================================================
+# SEMANTIC INVARIANTS
+# ==================================================
+
+  semantic_invariants:
+
+    S1:
+
+      name: "Exact-K independence"
+
+      enforcement_layers:
+        - compiler
+        - matrix_builder
+
+    S2:
+
+      name: "Slack non-negativity"
+
+      enforcement_layers:
+        - compiler
+
+# ==================================================
+# CONSTRAINT ARCHETYPES
+# ==================================================
+
+  constraint_archetypes:
+
+    cardinality: {}
+    assignment: {}
+    capacity: {}
+    budget: {}
+    routing: {}
+    precedence: {}
+    temporal: {}
+    connectivity: {}
+    inequality: {}
+    logic: {}
+
+# ==================================================
+# ALGEBRAIC CONSTRAINT STRUCTURE
+# ==================================================
+
+  constraints:
+
+    - id: "<constraint_id>"
+
+      archetype: "<optional_archetype>"
+
+      type: "quadratic_penalty"
+
+      penalty_weight:
+
+        mode: "tier | constant | symbolic | auto_scale"
+
+        tier: "<tier_name|null>"
+
+        value: "<number|null>"
+
+        symbol: "<parameter_name|null>"
+
+      expression:
+
+        form: >
+
+          squared_sum |
+          weighted_squared_sum |
+          partition_squared_sum |
+          difference_squared_sum |
+          general_quadratic |
+          inequality_le |
+          inequality_ge
+
+# ==================================================
+# EXPRESSION TREE
+# ==================================================
+
+        expression_tree:
+
+          type: >
+
+            square |
+            add |
+            subtract |
+            multiply |
+            variable |
+            constant |
+            parameter |
+            dataset |
+            aggregation |
+            weighted_aggregation |
+            slack_expansion |
+            flow_balance |
+            difference_squared |
+            arrival_time_bound |
+            time_propagation |
+            connection_enforcement |
+            precedence_chain |
+            relationship_gate |
+            derived_metric
+
+          argument: "<recursive_node>"
+          left: "<recursive_node>"
+          right: "<recursive_node>"
+
+          name: "<variable_name|null>"
+
+          indices: ["<index_symbol>"]
+
+          entity: "<entity_name|null>"
+          field: "<field_name|null>"
+
+          value: "<number|null>"
+          symbol: "<parameter_name|null>"
+
+# ==================================================
+# AGGREGATION SEMANTICS
+# ==================================================
+
+          aggregation:
+
+            variable: "<variable_name>"
+
+            partition_by:
+
+              mode: "none | index | dataset_field"
+
+              index: "<index_symbol|null>"
+
+              entity: "<entity_name|null>"
+
+              field: "<field_name|null>"
+
+          weighted_aggregation:
+
+            variable: "<variable_name>"
+
+            field: "<field_name>"
+
+# ==================================================
+# STRUCTURAL ALGEBRA
+# ==================================================
+
+          flow_balance:
+
+            variable: "<variable_name>"
+
+            algebra: "sum_in_minus_sum_out"
+
+          connection_enforcement:
+
+            variable: "<variable_name>"
+
+            semantics: "route_continuity"
+
+          precedence_chain:
+
+            variable: "<variable_name>"
+
+            semantics: "ordered_dependency"
+
+# ==================================================
+# RELATIONSHIP GATING
+# ==================================================
+
+          relationship_gate:
+
+            variable: "<variable_name>"
+
+            relationship_field: "<dataset_field>"
+
+# ==================================================
+# DERIVED METRICS
+# ==================================================
+
+          derived_metric:
+
+            name: "<metric_name>"
+
+            expression: "<expression_tree>"
+
+# ==================================================
+# TEMPORAL ALGEBRA
+# ==================================================
+
+          arrival_time_bound:
+
+            variable: "<variable_name>"
+
+            slack_variable: "<variable_name>"
+
+          time_propagation:
+
+            variable: "<variable_name>"
+
+            big_m_parameter: "<parameter_name>"
+
+# ==================================================
+# HAMILTONIAN GRAMMAR
+# ==================================================
+
+  hamiltonian_grammar:
+
+    primitives:
+
+      variable: binary
+      constant: real
+      parameter: real
+      dataset: real
+
+    unary_operations:
+
+      square:
+        input: real_expression
+        output: quadratic_expression
+
+    binary_operations:
+
+      add:
+        input: real_expression
+        output: real_expression
+
+      subtract:
+        input: real_expression
+        output: real_expression
+
+      multiply:
+        input: [real_expression, real_expression]
+        output: quadratic_expression
+
+# ==================================================
+# OBJECTIVE
+# ==================================================
+
+  objective:
+
+    sense: "minimize | maximize"
+
+    terms:
+
+      - id: "<term_id>"
+
+        type: "linear | quadratic"
+
+        applies_to:
+
+          variable: "<variable_name>"
+
+          index_projection: ["<index_symbol>"]
+
+        coefficient_source:
+
+          mode: "dataset | constant | symbolic"
+
+          entity: "<entity_name|null>"
+
+          field: "<field_name|null>"
+
+          value: "<number|null>"
+
+          symbol: "<parameter_name|null>"
+
+        sign: 1
+
+# --------------------------------------------------
+# PAIRWISE INTERACTION OBJECTIVES
+# --------------------------------------------------
+
+        interaction:
+
+          enabled: false
+
+          relationship_field: "<relationship_metric>"
+
+          variables:
+
+            - "<variable_name>"
+            - "<variable_name>"
+
+# ==================================================
+# COMPILER CONTRACT
+# ==================================================
+
+  compiler_contract:
+
+    responsibilities:
+
+      - expand_symbolic_constraints
+      - expand_entity_groups
+      - expand_derived_metrics
+      - introduce_slack_variables
+      - auto_size_slack_variables
+      - resolve_structural_indices
+      - enforce_semantic_invariants
+      - linearize_higher_order_terms
+
+    guarantees:
+
+      - deterministic_compilation
+      - solver_independent_output
+      - hamiltonian_safe_output
+      - inequality_safe_formulation
+
+# ==================================================
+# MATRIX BUILDER CONTRACT
+# ==================================================
+
+  matrix_builder_contract:
+
+    responsibilities:
+
+      - reduce_expression_tree
+      - expand_slack_encoding
+      - compute_linear_terms
+      - compute_quadratic_terms
+      - produce_Q_matrix
+
+    guarantees:
+
+      - symmetric_Q_matrix
+      - deterministic_term_order
+      - sparse_matrix_support
+
+# ==================================================
+# SAFETY RULES
+# ==================================================
+
+  safety_rules:
+
+    ir_must_not_contain:
+
+      - non_quadratic_terms
+      - solver_specific_constructs
+      - user_defined_slack_variables
+
+    data_contract_must_not_contain:
+
+      - algebraic_expressions
+      - summations
+      - inequalities
+      - graph_traversal_logic
+      - slack_variables
+
+# ==================================================
+# QUBO MATERIALIZATION
+# ==================================================
+
+  qubo_materialization:
+
+    representation: "symbolic | explicit_matrix"
+
+    Q_matrix: null
+    linear_vector: null
+    offset: 0.0
+
+# ==================================================
+# METADATA
+# ==================================================
+
+  metadata:
+
+    variable_count_estimate: 0
+    slack_variable_count: 0
+    slack_total_bit_count: 0
+    constraint_count: 0
+
+    flow_constraints_present: false
+    temporal_constraints_present: false
+    precedence_constraints_present: false
+
+    coupling_density: "sparse | medium | dense"
+    scalability_class: "linear | quadratic | cubic"
+
+    normalization_applied: false
+    structural_indices_resolved: false
+    inequality_safe: true
+
+    compile_timestamp: "<iso8601>"

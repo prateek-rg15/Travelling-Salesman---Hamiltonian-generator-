@@ -1,0 +1,11 @@
+equity_id,sector,cost,return_6m
+EQ001,Technology,245.50,0.18
+EQ002,Healthcare,132.75,0.12
+EQ003,Financials,98.40,0.09
+EQ004,Energy,76.20,-0.04
+EQ005,Consumer_Discretionary,154.10,0.21
+EQ006,Technology,110.65,0.07
+EQ007,Healthcare,63.90,0.03
+EQ008,Materials,88.30,0.11
+EQ009,Technology,52.45,-0.02
+EQ010,Real_Estate,140.80,0.15

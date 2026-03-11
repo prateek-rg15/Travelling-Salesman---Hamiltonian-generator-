@@ -1,0 +1,17 @@
+[
+  {
+    "problem_id": "QUBO-1",
+    "phase": "feasibility_core",
+    "hamiltonian_expression": "H(x) = 1000.0(\u03a3_i x_i - 1)\u00b2 + 1000.0(\u03a3_i x_i - 1)\u00b2 + 1000.0(\u03a3_i,r x_i,r - max_daily_travel_hours)\u00b2 + 1000.0(\u03a3_i x_i - 0)\u00b2"
+  },
+  {
+    "problem_id": "QUBO-2",
+    "phase": "feasibility_extended",
+    "hamiltonian_expression": "H(x) = 1000.0(\u03a3_i x_i - 1)\u00b2 + 1000.0(\u03a3_i x_i - 1)\u00b2"
+  },
+  {
+    "problem_id": "QUBO-3",
+    "phase": "refinement",
+    "hamiltonian_expression": "H(x) = 1000.0(\u03a3_i x_i - 1)\u00b2 + 1000.0(\u03a3_i x_i - 1)\u00b2"
+  }
+]

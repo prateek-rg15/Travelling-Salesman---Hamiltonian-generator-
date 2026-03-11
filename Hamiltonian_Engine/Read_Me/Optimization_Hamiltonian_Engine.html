@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Optimization Pipeline – Hamiltonian Engine Guide</title>
+
+<style>
+
+body{
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background:#f5f7fb;
+    margin:0;
+    padding:40px;
+    color:#2c3e50;
+}
+
+.container{
+    max-width:950px;
+    margin:auto;
+    background:white;
+    padding:50px;
+    border-radius:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.08);
+}
+
+h1{
+    text-align:center;
+    font-size:34px;
+}
+
+h2{
+    margin-top:40px;
+    border-bottom:2px solid #e6e9ef;
+    padding-bottom:6px;
+}
+
+pre{
+    background:#0f172a;
+    color:#e2e8f0;
+    padding:20px;
+    border-radius:8px;
+    font-family: "Courier New", monospace;
+    font-size:14px;
+    line-height:1.4;
+    overflow-x:auto;
+}
+
+.structure{
+    background:#fafafa;
+    color:#222;
+}
+
+.note{
+    background:#eef4ff;
+    padding:16px;
+    border-left:4px solid #3b82f6;
+    border-radius:6px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Optimization Pipeline – Hamiltonian Engine Guide</h1>
+
+<h2>Optimization Pipeline Architecture</h2>
+
+<pre>
+Problem Definition
+        │
+        ▼
+Resolved Optimization Request
+        │
+        ▼
+QUBO Execution Plan (QEP)
+        │
+        ▼
+Hamiltonian Engine
+        │
+        ▼
+QUBO Problem IR
+        │
+        ▼
+Hamiltonian Expression JSON
+        │
+        ▼
+(QUBO Matrix / Solver / Quantum Execution – future stages)
+</pre>
+
+
+<h2>Where the Hamiltonian Engine Fits</h2>
+
+<pre>
+Optimization Request
+        │
+        ▼
+QUBO Execution Plan
+        │
+        ▼
+Hamiltonian Engine
+        │
+        ├── QUBO Compiler
+        ├── Dataset Loader
+        └── IR Generator
+        │
+        ▼
+QUBO Problem IR
+</pre>
+
+
+<div class="note">
+<b>Design Principle</b><br>
+Hamiltonian Engine contains:
+<ul>
+<li>No domain logic</li>
+<li>No solver logic</li>
+<li>No AI / GenAI logic</li>
+</ul>
+It acts purely as a compiler layer.
+</div>
+
+
+<h2>Directory Structure</h2>
+
+<pre class="structure">
+Hamiltonian_Engine/
+
+├── Travel_Sequence_Optimization/
+│   ├── cities.csv
+│   ├── travel_times.csv
+│   ├── parameters.csv
+│   ├── qubo_execution_plan_problem.json
+│   └── resolved_optimization_problem_request.json
+│
+├── Portfolio_Optimization/
+│   ├── assets.csv
+│   ├── returns.csv
+│   ├── parameters.csv
+│   ├── qubo_execution_plan_problem.json
+│   └── resolved_optimization_problem_request.json
+│
+├── Result/
+│   └── <USER_ID>/
+│       ├── qubo_problem_ir.json
+│       └── hamiltonian_expression.json
+│
+├── pipeline_orchestrator.py
+└── hamiltonian_from_ir.py
+</pre>
+
+
+<h2>Running the Optimization Pipeline</h2>
+
+<h3>Step 1 — Start the Pipeline</h3>
+
+<pre>
+python pipeline_orchestrator.py
+</pre>
+
+<h3>Step 2 — Enter User ID</h3>
+
+<pre>
+Enter 4-digit USER ID: 1001
+</pre>
+
+Results stored in:
+
+<pre>
+Result/1001/
+</pre>
+
+
+<h3>Step 3 — Select Optimization Problem</h3>
+
+<pre>
+1 → Travel Sequence Optimization
+2 → Portfolio Optimization
+</pre>
+
+
+<h3>Step 4 — IR Generation</h3>
+
+<pre>
+Result/<USER_ID>/qubo_problem_ir.json
+</pre>
+
+
+<h3>Step 5 — Optional Hamiltonian Generation</h3>
+
+<pre>
+Generate complete Hamiltonian JSON file? (Y/N)
+</pre>
+
+Output:
+
+<pre>
+Result/<USER_ID>/hamiltonian_expression.json
+</pre>
+
+
+<h2>Example Output</h2>
+
+<pre class="structure">
+Result/1001/
+
+├── qubo_problem_ir.json
+└── hamiltonian_expression.json
+</pre>
+
+
+<h2>Future Extensions</h2>
+
+<ul>
+<li>QUBO Matrix generation</li>
+<li>Classical / Quantum solver integration</li>
+<li>QAOA execution</li>
+<li>Solution decoding</li>
+<li>Result analytics</li>
+</ul>
+
+</div>
+
+</body>
+</html>

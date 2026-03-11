@@ -1,0 +1,535 @@
+[
+  {
+    "ir_type": "universal_qubo_problem_ir",
+    "version": "5.1",
+    "problem_id": "QUBO-1",
+    "variables": {
+      "x": {
+        "primitive": "binary",
+        "structure": "indexed",
+        "origin": "decision_variable",
+        "index_sets": [
+          {
+            "name": "primary",
+            "kind": "entity"
+          },
+          {
+            "name": "position",
+            "kind": "entity"
+          },
+          {
+            "name": "day",
+            "kind": "entity"
+          }
+        ]
+      },
+      "slack_0": {
+        "primitive": "binary",
+        "structure": "slack",
+        "origin": "slack",
+        "domain": {
+          "lower": 0,
+          "upper": null
+        },
+        "index_sets": [
+          {
+            "name": "position",
+            "kind": "structural"
+          }
+        ],
+        "slack_encoding": {
+          "type": "binary_weighted",
+          "bit_length": null,
+          "upper_bound": null,
+          "auto_sized": true,
+          "expansion_status": "pending"
+        }
+      }
+    },
+    "parameters": [
+      {
+        "name": "position_count",
+        "mode": "runtime",
+        "value": null
+      },
+      {
+        "name": "day_count",
+        "mode": "runtime",
+        "value": null
+      },
+      {
+        "name": "max_daily_travel_hours",
+        "mode": "runtime",
+        "value": null
+      }
+    ],
+    "objective": {
+      "sense": "minimize",
+      "terms": [
+        {
+          "id": "routing_successor_coupling",
+          "type": "quadratic",
+          "applies_to": {
+            "variable": "x"
+          },
+          "interaction": {
+            "type": "successor_coupling",
+            "variable": "x",
+            "successor_offset": 1
+          }
+        }
+      ]
+    },
+    "constraints": [
+      {
+        "id": "C1",
+        "type": "quadratic_penalty",
+        "penalty_weight": {
+          "mode": "constant",
+          "value": 1000.0
+        },
+        "expression": {
+          "form": "general_quadratic",
+          "expression_tree": {
+            "type": "square",
+            "argument": {
+              "type": "subtract",
+              "left": {
+                "type": "aggregation",
+                "variable": "x",
+                "over": {
+                  "entities": [
+                    "primary"
+                  ]
+                }
+              },
+              "right": {
+                "type": "constant",
+                "value": 1
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "C2",
+        "type": "quadratic_penalty",
+        "penalty_weight": {
+          "mode": "constant",
+          "value": 1000.0
+        },
+        "expression": {
+          "form": "general_quadratic",
+          "expression_tree": {
+            "type": "square",
+            "argument": {
+              "type": "subtract",
+              "left": {
+                "type": "aggregation",
+                "variable": "x",
+                "over": {
+                  "structural_indices": [
+                    "position",
+                    "day"
+                  ]
+                }
+              },
+              "right": {
+                "type": "constant",
+                "value": 1
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "C3",
+        "type": "quadratic_penalty",
+        "penalty_weight": {
+          "mode": "constant",
+          "value": 1000.0
+        },
+        "expression": {
+          "form": "general_quadratic",
+          "expression_tree": {
+            "type": "square",
+            "argument": {
+              "type": "subtract",
+              "left": {
+                "type": "add",
+                "left": {
+                  "type": "aggregation",
+                  "variable": "x",
+                  "field": "travel_time",
+                  "dataset_role": "relationships",
+                  "over": {
+                    "entities": [
+                      "primary"
+                    ],
+                    "structural_indices": [
+                      "position"
+                    ]
+                  },
+                  "interaction": {
+                    "enabled": true,
+                    "variables": [
+                      "x",
+                      "x"
+                    ],
+                    "relationship_field": "travel_time"
+                  }
+                },
+                "right": {
+                  "type": "slack_expansion",
+                  "slack_variable": "slack_0",
+                  "encoding": {
+                    "type": "binary_weighted"
+                  }
+                }
+              },
+              "right": {
+                "type": "parameter",
+                "name": "max_daily_travel_hours"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "C4",
+        "type": "quadratic_penalty",
+        "penalty_weight": {
+          "mode": "constant",
+          "value": 1000.0
+        },
+        "expression": {
+          "form": "general_quadratic",
+          "expression_tree": {
+            "type": "square",
+            "argument": {
+              "type": "subtract",
+              "left": {
+                "type": "aggregation",
+                "variable": "x",
+                "field": null,
+                "dataset_role": null,
+                "over": {
+                  "entity_groups": [
+                    "no_overnight_cities"
+                  ],
+                  "structural_indices": [
+                    "position"
+                  ]
+                },
+                "interaction": {
+                  "enabled": false
+                }
+              },
+              "right": {
+                "type": "constant",
+                "value": 0
+              }
+            }
+          }
+        }
+      }
+    ],
+    "metadata": {
+      "variable_count_estimate": 2,
+      "slack_variable_count": 1,
+      "slack_total_bit_count": 0,
+      "constraint_count": 4,
+      "flow_constraints_present": true,
+      "temporal_constraints_present": false,
+      "precedence_constraints_present": false,
+      "normalization_applied": false,
+      "structural_indices_resolved": true,
+      "coupling_density": "sparse",
+      "scalability_class": "quadratic",
+      "inequality_safe": true,
+      "compile_timestamp": "2026-03-08T16:43:15.070611"
+    },
+    "qubo_id": "QUBO-1",
+    "phase": "feasibility_core"
+  },
+  {
+    "ir_type": "universal_qubo_problem_ir",
+    "version": "5.1",
+    "problem_id": "QUBO-2",
+    "variables": {
+      "x": {
+        "primitive": "binary",
+        "structure": "indexed",
+        "origin": "decision_variable",
+        "index_sets": [
+          {
+            "name": "primary",
+            "kind": "entity"
+          },
+          {
+            "name": "position",
+            "kind": "entity"
+          },
+          {
+            "name": "day",
+            "kind": "entity"
+          }
+        ]
+      }
+    },
+    "parameters": [
+      {
+        "name": "position_count",
+        "mode": "runtime",
+        "value": null
+      },
+      {
+        "name": "day_count",
+        "mode": "runtime",
+        "value": null
+      },
+      {
+        "name": "max_daily_travel_hours",
+        "mode": "runtime",
+        "value": null
+      }
+    ],
+    "objective": {
+      "sense": "minimize",
+      "terms": [
+        {
+          "id": "routing_successor_coupling",
+          "type": "quadratic",
+          "applies_to": {
+            "variable": "x"
+          },
+          "interaction": {
+            "type": "successor_coupling",
+            "variable": "x",
+            "successor_offset": 1
+          }
+        }
+      ]
+    },
+    "constraints": [
+      {
+        "id": "C1",
+        "type": "quadratic_penalty",
+        "penalty_weight": {
+          "mode": "constant",
+          "value": 1000.0
+        },
+        "expression": {
+          "form": "general_quadratic",
+          "expression_tree": {
+            "type": "square",
+            "argument": {
+              "type": "subtract",
+              "left": {
+                "type": "aggregation",
+                "variable": "x",
+                "over": {
+                  "entities": [
+                    "primary"
+                  ]
+                }
+              },
+              "right": {
+                "type": "constant",
+                "value": 1
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "C2",
+        "type": "quadratic_penalty",
+        "penalty_weight": {
+          "mode": "constant",
+          "value": 1000.0
+        },
+        "expression": {
+          "form": "general_quadratic",
+          "expression_tree": {
+            "type": "square",
+            "argument": {
+              "type": "subtract",
+              "left": {
+                "type": "aggregation",
+                "variable": "x",
+                "over": {
+                  "structural_indices": [
+                    "position",
+                    "day"
+                  ]
+                }
+              },
+              "right": {
+                "type": "constant",
+                "value": 1
+              }
+            }
+          }
+        }
+      }
+    ],
+    "metadata": {
+      "variable_count_estimate": 1,
+      "slack_variable_count": 0,
+      "slack_total_bit_count": 0,
+      "constraint_count": 2,
+      "flow_constraints_present": true,
+      "temporal_constraints_present": false,
+      "precedence_constraints_present": false,
+      "normalization_applied": false,
+      "structural_indices_resolved": true,
+      "coupling_density": "sparse",
+      "scalability_class": "quadratic",
+      "inequality_safe": true,
+      "compile_timestamp": "2026-03-08T16:43:15.077460"
+    },
+    "qubo_id": "QUBO-2",
+    "phase": "feasibility_extended"
+  },
+  {
+    "ir_type": "universal_qubo_problem_ir",
+    "version": "5.1",
+    "problem_id": "QUBO-3",
+    "variables": {
+      "x": {
+        "primitive": "binary",
+        "structure": "indexed",
+        "origin": "decision_variable",
+        "index_sets": [
+          {
+            "name": "primary",
+            "kind": "entity"
+          },
+          {
+            "name": "position",
+            "kind": "entity"
+          },
+          {
+            "name": "day",
+            "kind": "entity"
+          }
+        ]
+      }
+    },
+    "parameters": [
+      {
+        "name": "position_count",
+        "mode": "runtime",
+        "value": null
+      },
+      {
+        "name": "day_count",
+        "mode": "runtime",
+        "value": null
+      },
+      {
+        "name": "max_daily_travel_hours",
+        "mode": "runtime",
+        "value": null
+      }
+    ],
+    "objective": {
+      "sense": "minimize",
+      "terms": [
+        {
+          "id": "routing_successor_coupling",
+          "type": "quadratic",
+          "applies_to": {
+            "variable": "x"
+          },
+          "interaction": {
+            "type": "successor_coupling",
+            "variable": "x",
+            "successor_offset": 1
+          }
+        }
+      ]
+    },
+    "constraints": [
+      {
+        "id": "C1",
+        "type": "quadratic_penalty",
+        "penalty_weight": {
+          "mode": "constant",
+          "value": 1000.0
+        },
+        "expression": {
+          "form": "general_quadratic",
+          "expression_tree": {
+            "type": "square",
+            "argument": {
+              "type": "subtract",
+              "left": {
+                "type": "aggregation",
+                "variable": "x",
+                "over": {
+                  "entities": [
+                    "primary"
+                  ]
+                }
+              },
+              "right": {
+                "type": "constant",
+                "value": 1
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "C2",
+        "type": "quadratic_penalty",
+        "penalty_weight": {
+          "mode": "constant",
+          "value": 1000.0
+        },
+        "expression": {
+          "form": "general_quadratic",
+          "expression_tree": {
+            "type": "square",
+            "argument": {
+              "type": "subtract",
+              "left": {
+                "type": "aggregation",
+                "variable": "x",
+                "over": {
+                  "structural_indices": [
+                    "position",
+                    "day"
+                  ]
+                }
+              },
+              "right": {
+                "type": "constant",
+                "value": 1
+              }
+            }
+          }
+        }
+      }
+    ],
+    "metadata": {
+      "variable_count_estimate": 1,
+      "slack_variable_count": 0,
+      "slack_total_bit_count": 0,
+      "constraint_count": 2,
+      "flow_constraints_present": true,
+      "temporal_constraints_present": false,
+      "precedence_constraints_present": false,
+      "normalization_applied": false,
+      "structural_indices_resolved": true,
+      "coupling_density": "sparse",
+      "scalability_class": "quadratic",
+      "inequality_safe": true,
+      "compile_timestamp": "2026-03-08T16:43:15.077460"
+    },
+    "qubo_id": "QUBO-3",
+    "phase": "refinement"
+  }
+]
