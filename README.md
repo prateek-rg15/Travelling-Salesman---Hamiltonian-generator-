@@ -1,6 +1,7 @@
-# Optimization Pipeline – Overview and Hamiltonian Engine Guide
-
 ```
+Optimization Pipeline – Overview and Hamiltonian Engine Guide
+
+
 1. Overview
 
 This repository implements a modular optimization pipeline designed to transform a high-level optimization problem definition into a Hamiltonian representation suitable for QUBO/Ising-based quantum or classical optimization solvers.
